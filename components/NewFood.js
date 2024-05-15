@@ -6,71 +6,15 @@ import IconButton from "./IconButton";
 
 let foodList = null;
 
-export default function NewFood({visible, onCancel, onSave, renameItem = 'Name', ingredients, listName, onSaveIngredi, onTesting}){
-
-    const [name, setName] = useState(renameItem); //zu Beginn noch keine Eingabe
+export default function NewFood({visible, onCancel, onSave, item 
+}){
+    const [itemList, setItemList] = useState(item.Ingredients);
+    const [name, setName] = useState(item.name); 
     const [textInput, setTextInput] = useState(''); 
+
     const [filteredList, setFilteredList] = useState(null);
-    const [ingredientsList, setIngredientsList] = useState(ingredients);
     //console.log('ingredients: ' + ingredients);
    
-
-    useEffect(() => { //einmaliges Ausfuehren beim Start der App:
-        loadFoods(listName);
-        // for RESET: setMeals(dataMeals);
-      }, []);
-
-    const ListItem = ({ item, index }) => (
-        <TouchableOpacity 
-        onPress={() => addToList(item)}
-        >
-          <Text style={styles.items}>{item}</Text>
-        </TouchableOpacity>
-      )
-
-      const IngredientsItem = ({ item, index }) => (
-        <TouchableOpacity 
-        onLongPress={() => alert(`Was soll nun mit ${item} geschehen?`)}
-        >
-          <Text style={styles.items}>{item}</Text>
-        </TouchableOpacity>
-      )
-
-      function addToList(foodie){
-        /** 
-        const newFoodsList = [...ingredientsList, foodie];
-        setIngredientsList(newFoodsList)
-        setFilteredList(null);
-        setTextInput('');
-        saveFoods(newFoodsList);
-        console.log('add To List: ' + foodie);
-        
-        */
-        console.log('add To List: ' + foodie);
-        onSaveIngredi(foodie);
-      }
-
-      function saveFoods(newList){
-        //setIngredientsList(newList);
-        AsyncStorage.setItem({renameItem},JSON.stringify(newList));
-        console.log('save: ' + newList);
-      }
-
-      async function loadFoods(listNamee){
-        let foodsFromDB = await AsyncStorage.getItem(listNamee);
-        foodsFromDB = JSON.parse(foodsFromDB);
-        foodList = foodsFromDB;
-        console.log('load in Modal: ' + foodList);
-        //console.log('load in Modal ingredientsList: ' + ingredientsList);
-        
-      }
-
-    function searchFoodList(value){
-        //console.log('searching for food in foodList: ' + foodList);
-        const filteredData = foodList.filter(item =>
-          item.toLowerCase().includes(value.toLowerCase()));
-        setFilteredList(filteredData);
-      }
 
     return (
         <Modal
@@ -81,12 +25,10 @@ export default function NewFood({visible, onCancel, onSave, renameItem = 'Name',
             <View
             style={styles.container}>
 
-                <Text style={styles.text}>{renameItem}</Text>
-
-                <Text style={styles.text}>{'Test: ' + ingredients}</Text>
+                <Text style={styles.text}>{item.name}</Text>
 
                 <TextInput //neu umbenennen
-                placeholder={renameItem}
+                placeholder={item.name}
                 style={styles.input}
                 returnKeyType="done"
                 onChangeText={setName}
@@ -94,19 +36,6 @@ export default function NewFood({visible, onCancel, onSave, renameItem = 'Name',
                     //alert (`Senden Name:${name}`)
                     onSave(name)
                 )}/>
-            
-                {textInput != '' ? (
-                    <FlatList //Ergebnisse Suche
-                    style={[styles.foodList]}
-                    data={filteredList}
-                    keyboardShouldPersistTaps="handled" 
-                    //nestedScrollEnabled={true} 
-                    renderItem={
-                        ({ item, index}) => <ListItem item={item} index={index}/>}
-                    keyExtractor={
-                        (item, index) => index.toString()}>
-                    </FlatList>) :(
-                    null )}
                     
                 <TextInput //hinzufuegen neue Items
                 style={styles.input}
@@ -117,52 +46,45 @@ export default function NewFood({visible, onCancel, onSave, renameItem = 'Name',
                 //onSubmitEditing={()=> addNewFood()             }
                 ></TextInput>
 
-                <IconButton 
-                onPress={() => addToList(textInput)} 
-                icon="circle-plus"
-                style={[styles.addBtn]}></IconButton>
 
-                {/** 
-                {items && items.map((ingredient, index) => (
-                    <Pressable
-                    key={index}
-                    onPress={() => console.log('gedrueckt: ' + ingredient)}
-                    >
-                        <Text style={styles.text}>
-                            {ingredient}
+                <FlatList 
+                style={styles.foodList}
+                data={item.Ingredients}
+                keyboardShouldPersistTaps="handled" 
+                renderItem={
+                    ({ item, index }) => (
+                        <TouchableOpacity 
+                        onPress={() => console.log('click on ' + item)}>
+                        <Text 
+                        style={styles.items}
+                        //onPress={() => console.log('click on ' + item)}
+                        >{item}
                         </Text>
-                    </Pressable>
-                ))} 
-                */}
-
-                {ingredients != null ? (
-                    <FlatList 
-                    style={styles.foodList}
-                    data={ingredients.map(data => data.name)}
-                    keyboardShouldPersistTaps="handled" 
-                    renderItem={
-                        ({ item, index }) => <IngredientsItem item={item} index={index}/>}
-                    keyExtractor={
-                        (item, index) => index.toString()}
-                    showsVerticalScrollIndicator={false}
-                    overScrollMode='never'
-                    />) : null }
+                        </TouchableOpacity>
+                        )}
+                keyExtractor={(item, index) => index.toString()}
+                showsVerticalScrollIndicator={false}
+                overScrollMode='never'
+                />
+                <View
+                style={styles.buttons}>
 
                 <IconButton 
                 onPress={() => (console.log('ok, speichern'))} //Modal Maske oeffnen
                 icon="save"
-                style={[styles.addBtn]}></IconButton>
+                style={[styles.saveBtn]}></IconButton>
 
                 <IconButton 
-                onPress={(() => console.log('abbrechen'))} //Modal Maske oeffnen
+                onPress={onCancel} //Modal Maske oeffnen
                 icon="circle-chevron-left"
-                style={[styles.addBtn]}></IconButton>
+                style={[styles.backBtn]}></IconButton>
 
                 <IconButton 
                 onPress={() => ( onTesting(renameItem))} //Modal Maske oeffnen
                 icon="gear"
-                color='red'
+                color='firebrick'
                 style={[styles.testBtn]}></IconButton>
+                </View>
 
             </View>
        
@@ -176,8 +98,10 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: '#f5f5f5',
     },
     input:{
+        
         borderWidth: 1,
         borderColor: 'gray',
         borderRadius: 10,
@@ -187,10 +111,12 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     text:{
-        fontSize: 20,
+        fontSize: 23,
+        padding: 20,
     },
 
     items: {
+        //backgroundColor: 'red',
         fontSize: 20,
         padding: 15,
         paddingLeft:20,
@@ -205,16 +131,25 @@ const styles = StyleSheet.create({
     },
     foodList:{
         width: '80%',
+        maxHeight:'45%',
+        //backgroundColor: "silver",
       },
 
+    buttons:{
+        //alignSelf: 'flex-start',
+        flexDirection: 'row',
+        //margin: 15,
+        padding: 15,
+    },
     addBtn: {
-        alignSelf: 'center',
-        //top: -43, 
+        
+        //position: 'flex-start',
+        //marginTop: 5, 
         //right: "7%",
-        padding: 5,
+        //padding: 5,
     },
     testBtn:{
-        alignSelf: 'center',
-        margin: 15,
+        //alignSelf: 'center',
+        //margin: 15,
     },
 })

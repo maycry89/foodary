@@ -7,31 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import IconButton from './components/IconButton';
 import NewFood from './components/NewFood';
 
-const data = [
-  "Apfel",
-  "Banane",
-  "Orange",
-  "Erdbeere",
-  "Blaubeere",
-  "Brokkoli",
-  "Karotte",
-  "Spinat",
-  "Tomate",
-  "Gurke",
-  "Huhn",
-  "Rindfleisch",
-  "Lachs",
-  "Thunfisch",
-  "Ei",
-  "Milch",
-  "Joghurt",
-  "Käse",
-  "Reis",
-  "Nudeln",
-  "Brot",
-];
 
-const datas = [
+let datas = [
   { id: 1, name: "Apfel", category: 'Obst', eatenCount: 0 },
   { id: 2, name: "Tomaten", category: 'Gemuese', eatenCount: 0 },
   { id: 3, name: "Rote Linsen", category: 'Huelsenfruechte', eatenCount: 0 },
@@ -56,18 +33,9 @@ const datas = [
   { id: 22, name: "Brot", category: 'Getreideprodukte', eatenCount: 0 },
 ];
 
-
-const dataMeals = [
-  "Muesli",
-  "Kartoffelgratin",
-  "Borscht",
-  "WeisskohlKokosauflauf",
-  "Curry mit Gemuese",
-];
-
-const datasMeals = [
+let datasMeals = [
   {name: "Kartoffelgratin", Ingredients: ['Kartoffeln','Sahne', 'Käse']},
-  {name: "Borscht", Ingredients: ['Kraut','Rote Beete', 'Karotte']},
+  {name: "Borscht", Ingredients: ['Kraut','Rote Beete', 'Karotte','Paprika','Kartoffeln','Weisse Bohnen']},
   {name: "Muesli", Ingredients: ['Haferflocken','Mandeln', 'Weintrauben']},
   {name: "Pfannkuchen", Ingredients: ['Apfel','Ei', 'Milch']},
   {name: "Curry mit Gemuesse", Ingredients: ['Haehnchen','Ananas', 'Kokosmilch']},
@@ -78,73 +46,72 @@ const datasMeals = [
 let listName = "FOODS";
 let isActive = true;
 let indexSelectedItem;
+let selectedItem = 'noch nichts angeklickt';
+let selectedList = datas;
+//let shownData;
 
 export default function App() {
-  const [newMealsList, setNewMealsList] = useState(datasMeals);
+  const [visibleList, setVisibleList] = useState(datas.map(data => data.name));
   const [index, setIndex] = useState(0);
-
   const [food, setFood] = useState(null);
-  const [foods, setFoods] = useState(datas.map(data => data.name));
- 
   const [filteredList, setFilteredList] = useState(null);
   const [textInput, setText] = useState('');
   const flatListRef = useRef(null);
-  //const [listName, setListName] = useState('FOODS');
   const [showNewDialog, setShowNewDialog] = useState(false);
 
-  const [meals, setMeals] = useState(datasMeals);
 
-  useEffect(() => { //einmaliges Ausfuehren beim Start der App:
-    loadFoods(listName);
-    // for RESET: setMeals(dataMeals);
+  useEffect(() => { //einmaliges Ausfuehren beim Start:
+    //loadFoods(listName);
   }, []);
 
-  const ListItem = ({ item, index }) => (
+ //---------------------------------------------------
+  const ListItem = ({ index }) => (
     <TouchableOpacity 
-    onPress={() => setToEnd(item, index)}
-    onLongPress={() => handleLongPosition(item, index)}>
-      <Text style={styles.foodListText}>{item}</Text>
+    onPress={() => setToEnd(index)}
+    onLongPress={() => handleLongPosition(index)}
+    ><Text style={styles.foodListText}>{visibleList[index]}</Text>
     </TouchableOpacity>
   )
+
+  function setToEnd(index){
+    selectedList.push(selectedList.splice(index, 1)[0]); 
+    setVisibleList(selectedList.map(data => data.name));
+  }
+
+  function handleLongPosition(index){
+    Alert.alert(
+      'Lebensmittel bearbeiten',
+      visibleList[index] + '\n' + (selectedList[index].Ingredients ? 'Zutaten: ' + selectedList[index].Ingredients : ''),
+      [{text: 'Bearbeiten', style: 'default', onPress: ()=> renameFood(index)}, {text: 'Loeschen', style: 'default' ,onPress: ()=> removeItemFromList(index)}, {text: 'Abbrechen', style: 'cancel'}]
+    );
+  }
+//----------------------------------------------------
+
+function renameFood(index){
+  //show a new Dialog with an input field
+  setIndex(index);
+  console.log('index: ' + index);
+  indexSelectedItem = index;
+  setShowNewDialog(true);
+}
 
   async function loadFoods(listNamee){
     let foodsFromDB = await AsyncStorage.getItem(listNamee);
     //console.log('load: ' + foodsFromDB);
     foodsFromDB = JSON.parse(foodsFromDB);
-    setFoods(foodsFromDB);
+    //setVisibleList(foodsFromDB);
     // RESET: 
     //setFoods(datas.map(data => data.name));
   }
 
-  function setToEnd(foodie, index){
-    /** 
-    //index ist optional
-    console.log(foodie + ' index: ' + index);
-    const newFoodsList = [...foods.slice(0, index), ...foods.slice(index + 1), foodie];
-    setFoods(newFoodsList);
-    setFilteredList(foods);
-    setText('');
-    saveFoods(newFoodsList);
-    */
-
-    setIndex(index);
-  }
-
-  function handleLongPosition(item, index){
-    Alert.alert(
-      'Lebensmittel bearbeiten',
-      `${item}`,
-      [{text: 'Bearbeiten', style: 'default', onPress: ()=> renameFood(index)}, {text: 'Loeschen', style: 'default' ,onPress: ()=> removeItemFromList(index)}, {text: 'Abbrechen', style: 'cancel'}]
-    );
-  }
-
+  
   
   function addNewFood(){
     //TODO: CHECK, if food is already in the list? 
     console.log('Click on addNewFood ' + food);
     if(food !== null){
-      const newFoodsList = [...foods,food];
-      setFoods(newFoodsList);
+      //const newFoodsList = [...visibleList,food];
+      //setVisibleList(newFoodsList);
       saveFoods(newFoodsList);
       console.log('Added new food: ' +  food);
       setText('');
@@ -153,75 +120,60 @@ export default function App() {
     setShowNewDialog(true);
   }
 
-  function saveFoods(newList = foods){
+  function saveFoods(newList){
     AsyncStorage.setItem(listName,JSON.stringify(newList));
     console.log('save: ' + newList);
   }
 
-  // RESET FOR TESTING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  function resetList(listParam, index){
-    //setFoods(datas);
-    //AsyncStorage.setItem('FOODS',JSON.stringify(foods));
-    //console.log('reset! ZEILE 158 ' + foods[0].id);
-      // Sortiere die Gerichte im Array nach dem Namen
-      //newMealsList.sort((a, b) => a.name.localeCompare(b.name));
 
-      const thirdElement = listParam.splice(index, 1)[0]; // Das dritte Element entfernen und in einer Variablen speichern
-      listParam.push(thirdElement); // Das entfernte Element ans Ende des Arrays hinzufügen
-      //setNewMealsList(listParam);
-      
-      setFoods(listParam.map(data => data.name));
-    // Gib die neue Reihenfolge in der Konsole aus
-    console.log(listParam);
-
-
-  }
-
-  function renameFood(index){
-    //show a new Dialog with an input field
-    console.log('index: ' + index);
-    indexSelectedItem = index;
-    setShowNewDialog(true);
-}
+ 
 
   function removeItemFromList(index){
-      const newFoodList = [...foods];
-    newFoodList.splice(index, 1);
-    setFoods([...newFoodList]);
+     // const newFoodList = [...visibleList];
+    //newFoodList.splice(index, 1);
+    //setVisibleList([...newFoodList]);
     alert('geloescht!');
-    saveFoods(newFoodList);
+    //saveFoods(newFoodList);
   }
 
 
   function searchFoodList(value){
-    const filteredData = foods.filter(item =>
-      item.toLowerCase().includes(value.toLowerCase()));
-    setFilteredList(filteredData);
+    //const filteredData = visibleList.filter(item =>
+    //  item.toLowerCase().includes(value.toLowerCase()));
+    //setFilteredList(filteredData);
   }
 
   function selectVisibleList(changedListName){
+
     isActive = ((changedListName !== listName) ? !isActive  : isActive);
-    //console.log('change List to ' + changedListName);
+    console.log('change List to ' + changedListName);
     listName = changedListName;
     loadFoods(changedListName);
   }
 
   function editItem(foodName){
     //setShowNewDialog(false);
-    foods[indexSelectedItem] = foodName;
-      saveFoods(foods);
+    //visibleList[indexSelectedItem] = foodName;
+      //saveFoods(visibleList);
       console.log('TEST TEST Added new food: ' +  foodName);
   }
   
-  let meal = meals[indexSelectedItem];
+  //let meal = meals[indexSelectedItem];
 
   
   function addNewIngredients(ingredi){
     console.log('adding new ingredient: ' + ingredi + ' to this meal: ' );
   }
 
-  function testMethod(testParam){
-    console.log('Testing Methode!! ' + testParam);
+  function testMethod(){
+    console.log('Testing Methode!! ' );
+  }
+
+  function selectList(selectedListName, data){
+    isActive = ( selectedListName === listName ? isActive : !isActive);
+    listName = selectedListName;
+    setVisibleList(data.map(d => d.name));
+    selectedList = data;//TODO: data load from storage
   }
 
   // ################ ########### 3######## ####  ELEMENTE ######## ######### #############
@@ -231,15 +183,18 @@ export default function App() {
     style={styles.container}
     keyboardVerticalOffset={-1500} >   
 
+      <Text>{}</Text>
+
       <IconButton
-      onPress={() => (selectVisibleList('FOODS'),setNewMealsList(datas))}
+      //onPress={() => (selectVisibleList('FOODS'), setNewMealsList(datas))} 
+      onPress={() => (selectList('FOODS', datas))} 
       icon="apple-whole"
       style={[styles.foodsBtn, styles.borderRegistry, {backgroundColor: isActive ? 'white' : 'gainsboro'}]}>
       </IconButton>
 
       <IconButton
       // TODO: Statt MEALS, lieber das Listenobjekt uebergeben und name auslesen
-      onPress={() => (selectVisibleList('MEALS'),setNewMealsList(datasMeals))}
+      onPress={() => (selectList('MEALS' , datasMeals))} //selectVisibleList('MEALS'), 
       icon="bowl-food"
       style={[styles.mealsBtn, styles.borderRegistry, {backgroundColor: isActive ? 'gainsboro' : 'white'}]}
       >
@@ -255,7 +210,7 @@ export default function App() {
       keyboardShouldPersistTaps="handled" 
       //nestedScrollEnabled={true} 
       renderItem={
-        ({ item}) => <ListItem item={item} index={foods.indexOf(item)}/>}
+        ({ item}) => <ListItem item={item} index={index}/>}
       keyExtractor={
         (item, index) => index.toString()}>
       </FlatList>) :(
@@ -263,10 +218,10 @@ export default function App() {
       <FlatList 
       ref={flatListRef}
       style={styles.foodList}
-      data={foods}
+      data={visibleList}
       keyboardShouldPersistTaps="handled" 
       renderItem={
-        ({ item, index }) => <ListItem item={item} index={index}/>}
+        ({ index }) => <ListItem index={index}/>}
       keyExtractor={
         (item, index) => index.toString()}
       showsVerticalScrollIndicator={false}
@@ -292,24 +247,28 @@ export default function App() {
       visible={showNewDialog}
       onCancel={() => setShowNewDialog(false)}
       onSave={editItem}
-      onSaveIngredi={addNewIngredients}
-      renameItem={foods[indexSelectedItem]}
-      ingredients={foods[indexSelectedItem] !== undefined ? foods[indexSelectedItem].Ingredients : null}
-      listName="FOODS"
-      onTesting={testMethod}
+      item={selectedList[index]}
+      //onSaveIngredi={addNewIngredients}
+      //renameItem={visibleList[indexSelectedItem]}
+      //ingredients={visibleList[indexSelectedItem] !== undefined ? visibleList[indexSelectedItem].Ingredients : null}
+      //listName="FOODS"
+      //onTesting={testMethod}
       //TODO: ingredients={} hier die ZutatenListe uebergeben
       >
       </NewFood>
 
       <IconButton 
-                onPress={() => (resetList(newMealsList, index))} //Modal Maske oeffnen
+                onPress={() => (testMethod())} //Modal Maske oeffnen
                 icon="gear"
                 style={[styles.testBtn]}
                 color='firebrick'></IconButton>
 
-      <Text>{"IndexNr: " + index}</Text>
-      <Text>{"Zutaten: " + newMealsList[index].Ingredients}</Text>
+{/** 
+      <Text>{"IndexNr: " + index + ' Angeklickt: ' + selectedItem}</Text>
+      <Text>{"Zutaten: " + ((listName === 'MEALS')  ? visibleList[index].Ingredients : 'keine Zutaten vorhanden')}</Text>
+      */}
       <StatusBar style="auto" />
+      
 
     </KeyboardAvoidingView>
   );
