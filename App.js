@@ -8,7 +8,7 @@ import IconButton from './components/IconButton';
 import NewFood from './components/NewFood';
 
 
-let datas = [
+let foodData = [
   { id: 1, name: "Apfel", category: 'Obst', eatenCount: 0 },
   { id: 2, name: "Tomaten", category: 'Gemuese', eatenCount: 0 },
   { id: 3, name: "Rote Linsen", category: 'Huelsenfruechte', eatenCount: 0 },
@@ -33,30 +33,30 @@ let datas = [
   { id: 22, name: "Brot", category: 'Getreideprodukte', eatenCount: 0 },
 ];
 
-let datasMeals = [
+let mealsData = [
   {name: "Kartoffelgratin", Ingredients: ['Kartoffeln','Sahne', 'Käse']},
   {name: "Borscht", Ingredients: ['Kraut','Rote Beete', 'Karotte','Paprika','Kartoffeln','Weisse Bohnen']},
   {name: "Muesli", Ingredients: ['Haferflocken','Mandeln', 'Weintrauben']},
   {name: "Pfannkuchen", Ingredients: ['Apfel','Ei', 'Milch']},
   {name: "Curry mit Gemuesse", Ingredients: ['Haehnchen','Ananas', 'Kokosmilch']},
   {name: "Salat", Ingredients: ['Zwiebeln','Tomaten', 'Gurke']},
-
 ]
 
-let listName = "FOODS";
+const testData = ["test","test2"];
+
+let storageListName = "FOODS";
 let isActive = true;
 let indexSelectedItem;
 let selectedItem = 'noch nichts angeklickt';
-let selectedList = datas;
+let selectedList = foodData;
 //let shownData;
 
 export default function App() {
-  const [visibleList, setVisibleList] = useState(datas.map(data => data.name));
+  const [visibleList, setVisibleList] = useState(foodData.map(data => data.name));
   const [index, setIndex] = useState(0);
   const [food, setFood] = useState(null);
   const [filteredList, setFilteredList] = useState(null);
-  const [textInput, setText] = useState('');
-  const flatListRef = useRef(null);
+  const [inputText, setInputText] = useState('');
   const [showNewDialog, setShowNewDialog] = useState(false);
 
 
@@ -65,17 +65,20 @@ export default function App() {
   }, []);
 
  //---------------------------------------------------
-  const ListItem = ({ index }) => (
+  const ListItem = ({ index, item}) => (
     <TouchableOpacity 
     onPress={() => setToEnd(index)}
     onLongPress={() => handleLongPosition(index)}
-    ><Text style={styles.foodListText}>{visibleList[index]}</Text>
+    ><Text style={styles.foodListText}>{item}</Text>
     </TouchableOpacity>
   )
 
   function setToEnd(index){
+    console.log(selectedList[index].name + ' Index: '+ index );
     selectedList.push(selectedList.splice(index, 1)[0]); 
     setVisibleList(selectedList.map(data => data.name));
+    //close the input field
+    setInputText('');
   }
 
   function handleLongPosition(index){
@@ -104,7 +107,15 @@ function renameFood(index){
     //setFoods(datas.map(data => data.name));
   }
 
-  
+  function searchFoodList(inputValue){
+    //der Index von visibleList wird angezeigt
+    const filteredData = visibleList.filter(item =>
+      item.toLowerCase().includes(inputValue.toLowerCase()));
+      setFilteredList(filteredData);
+      //setFilteredList(testData);
+      //console.log(filteredList);
+    //setVisibleList(filteredData.map(data => data.name)); 
+  }
   
   function addNewFood(){
     //TODO: CHECK, if food is already in the list? 
@@ -114,14 +125,14 @@ function renameFood(index){
       //setVisibleList(newFoodsList);
       saveFoods(newFoodsList);
       console.log('Added new food: ' +  food);
-      setText('');
+      setInputText('');
       setFood(null);
     }
     setShowNewDialog(true);
   }
 
   function saveFoods(newList){
-    AsyncStorage.setItem(listName,JSON.stringify(newList));
+    AsyncStorage.setItem(storageListName,JSON.stringify(newList));
     console.log('save: ' + newList);
   }
 
@@ -137,25 +148,21 @@ function renameFood(index){
   }
 
 
-  function searchFoodList(value){
-    //const filteredData = visibleList.filter(item =>
-    //  item.toLowerCase().includes(value.toLowerCase()));
-    //setFilteredList(filteredData);
-  }
+ 
 
   function selectVisibleList(changedListName){
 
-    isActive = ((changedListName !== listName) ? !isActive  : isActive);
+    isActive = ((changedListName !== storageListName) ? !isActive  : isActive);
     console.log('change List to ' + changedListName);
-    listName = changedListName;
+    storageListName = changedListName;
     loadFoods(changedListName);
   }
 
   function editItem(foodName){
-    //setShowNewDialog(false);
+    setShowNewDialog(false);
     //visibleList[indexSelectedItem] = foodName;
       //saveFoods(visibleList);
-      console.log('TEST TEST Added new food: ' +  foodName);
+    console.log('TEST TEST Added new food: ' +  foodName);
   }
   
   //let meal = meals[indexSelectedItem];
@@ -169,11 +176,11 @@ function renameFood(index){
     console.log('Testing Methode!! ' );
   }
 
-  function selectList(selectedListName, data){
-    isActive = ( selectedListName === listName ? isActive : !isActive);
-    listName = selectedListName;
-    setVisibleList(data.map(d => d.name));
-    selectedList = data;//TODO: data load from storage
+  function selectList(listName, listData){
+    isActive = ( listName === storageListName ? isActive : !isActive);
+    storageListName = listName;
+    setVisibleList(listData.map(d => d.name));
+    selectedList = listData;//TODO: data load from storage
   }
 
   // ################ ########### 3######## ####  ELEMENTE ######## ######### #############
@@ -183,18 +190,17 @@ function renameFood(index){
     style={styles.container}
     keyboardVerticalOffset={-1500} >   
 
-      <Text>{}</Text>
 
       <IconButton
       //onPress={() => (selectVisibleList('FOODS'), setNewMealsList(datas))} 
-      onPress={() => (selectList('FOODS', datas))} 
+      onPress={() => (selectList('FOODS', foodData))} 
       icon="apple-whole"
       style={[styles.foodsBtn, styles.borderRegistry, {backgroundColor: isActive ? 'white' : 'gainsboro'}]}>
       </IconButton>
 
       <IconButton
       // TODO: Statt MEALS, lieber das Listenobjekt uebergeben und name auslesen
-      onPress={() => (selectList('MEALS' , datasMeals))} //selectVisibleList('MEALS'), 
+      onPress={() => (selectList('MEALS' , mealsData))} //selectVisibleList('MEALS'), 
       icon="bowl-food"
       style={[styles.mealsBtn, styles.borderRegistry, {backgroundColor: isActive ? 'gainsboro' : 'white'}]}
       >
@@ -202,41 +208,46 @@ function renameFood(index){
 
       {/** unschoen , wie besser, cleaner ??
        FlatList Objekt anlegen.  */}
-      {textInput != '' ? (
-  
-      <FlatList
-      style={[styles.foodList]}
-      data={filteredList}
-      keyboardShouldPersistTaps="handled" 
-      //nestedScrollEnabled={true} 
-      renderItem={
-        ({ item}) => <ListItem item={item} index={index}/>}
-      keyExtractor={
-        (item, index) => index.toString()}>
-      </FlatList>) :(
+      
+      {inputText != '' ? 
+        <FlatList
+        style={[styles.foodList]}
+        data={filteredList}
+        keyboardShouldPersistTaps="handled" 
+        //nestedScrollEnabled={true} 
+        renderItem={
+          ({ index, item: items}) => <ListItem index={visibleList.indexOf(items)} item={items}/>}
+        keyExtractor={
+          (item, index) => index.toString()}>
+        </FlatList> :
 
-      <FlatList 
-      ref={flatListRef}
-      style={styles.foodList}
-      data={visibleList}
-      keyboardShouldPersistTaps="handled" 
-      renderItem={
-        ({ index }) => <ListItem index={index}/>}
-      keyExtractor={
-        (item, index) => index.toString()}
-      showsVerticalScrollIndicator={false}
-      overScrollMode='never'
-      />)}
+        <FlatList 
+        style={styles.foodList}
+        data={visibleList}
+        keyboardShouldPersistTaps="handled" 
+        renderItem={
+          ({ index, item}) => 
+            (<ListItem index={index} item={item}/>)}
+        keyExtractor={
+          (item, index) => index.toString()}
+        showsVerticalScrollIndicator={false}
+        overScrollMode='never'
+        />}
+
+        {inputText != '' ? <Text>Input vorhanden</Text>: <Text>Input leer</Text>}
+
 
       <TextInput
       style={styles.input}
       placeholder="suchen..."
-      value={textInput}
+      value={inputText}
       returnKeyType="search" //Symbol Tastatur
-      onChangeText={value => {setText(value),  searchFoodList(value), setFood(textInput)}} //
-      onSubmitEditing={()=> addNewFood()
-      }
-      ></TextInput>
+      onChangeText={value => {
+        console.log('Value: ' + value), //check
+        setInputText(value), 
+        searchFoodList(value)
+        //set, 
+      }}       ></TextInput>
 
       <IconButton 
       onPress={addNewFood} //Modal Maske oeffnen
@@ -248,14 +259,7 @@ function renameFood(index){
       onCancel={() => setShowNewDialog(false)}
       onSave={editItem}
       item={selectedList[index]}
-      //onSaveIngredi={addNewIngredients}
-      //renameItem={visibleList[indexSelectedItem]}
-      //ingredients={visibleList[indexSelectedItem] !== undefined ? visibleList[indexSelectedItem].Ingredients : null}
-      //listName="FOODS"
-      //onTesting={testMethod}
-      //TODO: ingredients={} hier die ZutatenListe uebergeben
-      >
-      </NewFood>
+      ></NewFood>
 
       <IconButton 
                 onPress={() => (testMethod())} //Modal Maske oeffnen

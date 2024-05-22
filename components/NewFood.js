@@ -11,10 +11,9 @@ export default function NewFood({visible, onCancel, onSave, item
     const [itemList, setItemList] = useState(item.Ingredients);
     const [name, setName] = useState(item.name); 
     const [textInput, setTextInput] = useState(''); 
-
     const [filteredList, setFilteredList] = useState(null);
     //console.log('ingredients: ' + ingredients);
-   
+   //const itemLenght = item.Ingredients.lenght;
 
     return (
         <Modal
@@ -42,13 +41,11 @@ export default function NewFood({visible, onCancel, onSave, item
                 placeholder="hinzufuegen..."
                 value={textInput}
                 returnKeyType="search" //Symbol Tastatur
-                onChangeText={value => {setTextInput(value), searchFoodList(value)}} // , setFood(textInput)
+                onChangeText={value => {searchFoodList}} // , setFood(textInput)
                 //onSubmitEditing={()=> addNewFood()             }
                 ></TextInput>
 
-
                 <FlatList 
-                style={styles.foodList}
                 data={item.Ingredients}
                 keyboardShouldPersistTaps="handled" 
                 renderItem={
@@ -57,33 +54,34 @@ export default function NewFood({visible, onCancel, onSave, item
                         onPress={() => console.log('click on ' + item)}>
                         <Text 
                         style={styles.items}
-                        //onPress={() => console.log('click on ' + item)}
                         >{item}
                         </Text>
                         </TouchableOpacity>
                         )}
                 keyExtractor={(item, index) => index.toString()}
+                style={[styles.foodList]}
                 showsVerticalScrollIndicator={false}
                 overScrollMode='never'
                 />
+                
                 <View
                 style={styles.buttons}>
 
-                <IconButton 
-                onPress={() => (console.log('ok, speichern'))} //Modal Maske oeffnen
-                icon="save"
-                style={[styles.saveBtn]}></IconButton>
+                    <IconButton 
+                    onPress={onCancel} //Modal Maske oeffnen
+                    icon="circle-chevron-left"
+                    style={[styles.btn]}></IconButton>
 
-                <IconButton 
-                onPress={onCancel} //Modal Maske oeffnen
-                icon="circle-chevron-left"
-                style={[styles.backBtn]}></IconButton>
+                    <IconButton 
+                    onPress={() => onSave} 
+                    icon="save"
+                    style={[styles.btn]}></IconButton>
 
-                <IconButton 
-                onPress={() => ( onTesting(renameItem))} //Modal Maske oeffnen
-                icon="gear"
-                color='firebrick'
-                style={[styles.testBtn]}></IconButton>
+                    <IconButton 
+                    onPress={() => ( onTesting(renameItem))} 
+                    icon="gear"
+                    color='firebrick'
+                    style={[styles.btn]}></IconButton>
                 </View>
 
             </View>
@@ -130,26 +128,25 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     foodList:{
+        //flex: 1,
+       //minHeight: '20%',
         width: '80%',
+        //height: 30,
         maxHeight:'45%',
-        //backgroundColor: "silver",
+        //backgroundColor: "royalblue",
       },
 
     buttons:{
+        //alignItems: 'center',
         //alignSelf: 'flex-start',
+        justifyContent: 'space-between',
         flexDirection: 'row',
         //margin: 15,
-        padding: 15,
+        //padding: 15,
+        //backgroundColor: 'silver',
     },
-    addBtn: {
-        
-        //position: 'flex-start',
-        //marginTop: 5, 
-        //right: "7%",
-        //padding: 5,
+    btn: {
+        paddingHorizontal: 40,
     },
-    testBtn:{
-        //alignSelf: 'center',
-        //margin: 15,
-    },
+ 
 })
